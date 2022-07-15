@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Rolling Game</title>
+    <style>
+        body {
+            user-select: none;
+            font-family: sans-serif;
+        }
+
+        p {
+            font-size: 24px;
+        }
+
+        button {
+            font-size: 32px;
+        }
+
+        div {
+            font-size: 48px;
+        }
+
+        span {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            box-sizing: border-box;
+            width: 75px;
+            height: 75px;
+            font-size: 64px;
+        }
+
+        span[data-value="0"] {
+            font-size: 32px;
+        }
+    </style>
+</head>
+<body>
+<script>
+    let DIE_CHARS = ['🎲', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+    let GOAL = 24;
+    let dice = [];
+    let rerollButtons = [null];
+
+    let titleH = document.createElement('h1');
+    titleH.textContent = `${GOAL}: A Dice Game`;
+    document.body.appendChild(titleH);
+    
+    let descP = document.createElement('p');
+    descP.textContent = "Click or tap the dice to roll them! Your objective is to get the total of all of your dice to equal exactly " + GOAL + ". After rolling all of your dice, pick a number, from 1 to 6, and add up all of the dice with that number on them. You then roll that many new dice! Try to get exactly " + GOAL + "!"
+    document.body.appendChild(descP);
+    let totalDiv = document.createElement('div');
+    document.body.appendChild(totalDiv);
+    for (let i = 1; i <= 6; i++) {
+        let rerollButton = document.createElement('button');
+        rerollButton.addEventListener('click', () => {
+            let total = dice.filter(d => d.value === i).reduce((p, d) => p + d.value, 0);
+            for (let die of dice) die.el.remove();
+            dice.length = 0;
+            for (let i = 0; i < total; i++) addDie();
+        });
+        document.body.appendChild(rerollButton);
+        rerollButtons.push(rerollButton);
+    }
+    document.body.appendChild(document.createElement('div'));
+    
+    function addDie() {
+        let el = document.createElement('span');
+        document.body.appendChild(el);
+        let die = { value: 0, el };
+        el.addEventListener('mousedown', () => {
+            if (die.value === 0) {
+                die.value = 1 + Math.floor(Math.random() * 6);
+                update();
+            }
+        });
+        dice.push(die);
+        update();
+    }
+
+    function update() {
+        for (let die of dice) {
+            die.el.textContent = DIE_CHARS[die.value];
+            die.el.setAttribute('data-value', die.value);
+        }
+        let total = dice.reduce((p, d) => p + d.value, 0);
+        let revealed = dice.filter(d => d.value > 0).length;
+        totalDiv.textContent = 'Total: ' + total + ' / ' + GOAL + " (" + revealed + ' / ' + dice.length + ' dice)';
+        let win = total === GOAL && revealed === dice.length;
+        if (win) {
+            totalDiv.textContent = 'YOU WIN!';
+        }
+        for (let i = 1; i <= 6; i++) {
+            let rerollButton = rerollButtons[i];
+            let subTotal = dice.filter(d => d.value === i).reduce((p, d) => p + d.value, 0);
+            rerollButton.textContent = 'Roll with all ' + i + 's (' + subTotal + ')';
+            rerollButton.disabled = revealed !== dice.length || dice.filter(d => d.value === i).length === 0;
+            rerollButton.hidden = win;
+        }
+    }
+
+    addDie();
+</script>
+</body>
+</html>
